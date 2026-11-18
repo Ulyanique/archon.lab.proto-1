@@ -1,0 +1,615 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────
+   ARCHON DESIGN SYSTEM — Dark Industrial / Classified Archive
+   Палитра по ТЗ §6: чёрный, антрацит, тёмно-синий, тёмно-серый,
+   металл, ржавчина, приглушённые оранжевый и зелёный акценты.
+   ─────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #0b0d10;
+  --bg-raised: #111419;
+  --panel: #14181e;
+  --panel-2: #191e25;
+  --line: #262d36;
+  --line-strong: #39434f;
+  --text: #d6dad8;
+  --text-dim: #9aa39f;
+  --text-faint: #69726f;
+  --navy: #16212c;
+  --rust: #b4642b;
+  --orange: #c97a35;
+  --green: #6d9a5f;
+  --warn: #c9a24a;
+  --iris: linear-gradient(90deg, #b4642b 0%, #8a8a3a 50%, #5f8f55 100%);
+  --font-ui: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-head: "Arial Narrow", "Helvetica Neue", Arial, "Liberation Sans Narrow", sans-serif;
+  --font-read: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+}
+
+html {
+  background: var(--bg);
+  color-scheme: dark;
+}
+body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 500px at 70% -10%, #131b24 0%, transparent 60%), var(--bg);
+  color: var(--text);
+  font-family: var(--font-read);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: var(--orange);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(201, 122, 53, 0.35);
+}
+a:hover {
+  color: #e6944c;
+  border-bottom-color: currentColor;
+}
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+::selection {
+  background: rgba(109, 154, 95, 0.35);
+}
+
+/* ── каркас ── */
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 13, 16, 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--iris);
+  opacity: 0.55;
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 56px;
+}
+.brand {
+  font-family: var(--font-head);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text);
+  border: 0;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.brand small {
+  display: block;
+  font-family: var(--font-ui);
+  letter-spacing: 0.12em;
+  font-weight: 400;
+  font-size: 9.5px;
+  color: var(--text-faint);
+  margin-top: -2px;
+}
+.brand:hover {
+  color: var(--text);
+}
+.nav {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+}
+.nav::-webkit-scrollbar {
+  display: none;
+}
+.nav a {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.nav a:hover {
+  color: var(--text);
+}
+.nav a[aria-current="page"] {
+  color: var(--text);
+  border-bottom-color: var(--orange);
+}
+main.shell {
+  padding-top: 36px;
+  padding-bottom: 72px;
+}
+.footer {
+  border-top: 1px solid var(--line);
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 22px 0 40px;
+}
+.footer .shell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: space-between;
+}
+
+/* ── типографика ── */
+h1,
+h2,
+h3 {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.12;
+  color: #eceeed;
+}
+.page-title {
+  font-size: clamp(2rem, 5.5vw, 3.6rem);
+  font-weight: 700;
+  margin: 6px 0 14px;
+}
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.eyebrow b {
+  color: var(--orange);
+  font-weight: 500;
+}
+.lead {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 62ch;
+}
+.mono {
+  font-family: var(--font-ui);
+}
+.rule {
+  height: 1px;
+  background: var(--iris);
+  opacity: 0.45;
+  border: 0;
+  margin: 28px 0;
+}
+
+/* ── статус-штампы ── */
+.stamp {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid currentColor;
+  color: var(--text-dim);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.stamp.s-canon {
+  color: var(--green);
+}
+.stamp.s-review,
+.stamp.s-proposed {
+  color: var(--warn);
+}
+.stamp.s-unresolved {
+  color: var(--orange);
+  border-style: dashed;
+}
+.stamp.s-deprecated,
+.stamp.s-archived,
+.stamp.s-draft {
+  color: var(--text-faint);
+}
+.notice {
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--warn);
+  background: var(--panel);
+  padding: 12px 16px;
+  font-size: 0.93rem;
+  color: var(--text-dim);
+  margin: 18px 0;
+}
+.notice.unresolved {
+  border-left-color: var(--orange);
+}
+.notice strong {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-right: 8px;
+}
+
+/* ── сетки и карточки ── */
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.card {
+  position: relative;
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px 18px 18px;
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s;
+}
+.card:hover {
+  border-color: var(--line-strong);
+  background: var(--panel-2);
+  color: var(--text);
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--iris);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.card:hover::before {
+  opacity: 1;
+}
+.card h3 {
+  font-size: 1.3rem;
+  margin: 8px 0 6px;
+}
+.card p {
+  font-size: 0.93rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+.card .meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.empty {
+  border: 1px dashed var(--line-strong);
+  padding: 28px;
+  color: var(--text-dim);
+  background: var(--bg-raised);
+}
+
+/* ── главная ── */
+.hero {
+  position: relative;
+  padding: 44px 0 38px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 36px;
+}
+.hero h1 {
+  font-size: clamp(2.6rem, 9vw, 6rem);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  margin: 10px 0 18px;
+}
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin: 28px 0 0;
+}
+.stats > div {
+  flex: 1 1 130px;
+  background: var(--bg-raised);
+  padding: 12px 16px;
+}
+.stats b {
+  display: block;
+  font-family: var(--font-head);
+  font-size: 2rem;
+  color: #eceeed;
+  line-height: 1.1;
+}
+.stats span {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 40px 0 14px;
+  gap: 12px;
+}
+.section-head h2 {
+  font-size: 1.25rem;
+  margin: 0;
+  letter-spacing: 0.12em;
+}
+
+/* ── страница сущности ── */
+.entity-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 44px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .entity-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+.aside {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+}
+.aside h3 {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--text-faint);
+  margin: 0;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-weight: 500;
+}
+.aside dl {
+  margin: 0;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 6px 10px;
+}
+.aside dt {
+  color: var(--text-faint);
+}
+.aside dd {
+  margin: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+.aside ul {
+  list-style: none;
+  margin: 0;
+  padding: 8px 14px 12px;
+}
+.aside li {
+  padding: 4px 0;
+  line-height: 1.4;
+}
+.aside .rel {
+  color: var(--text-faint);
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.aside > section + section {
+  border-top: 1px solid var(--line);
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.tag {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 1px 7px;
+}
+
+/* ── текст статьи ── */
+.prose {
+  max-width: 70ch;
+}
+.prose h2 {
+  font-size: 1.35rem;
+  margin: 2.2em 0 0.6em;
+  padding-top: 0.9em;
+  border-top: 1px solid var(--line);
+  letter-spacing: 0.1em;
+}
+.prose h2:first-child {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+.prose h3 {
+  font-size: 1.05rem;
+  margin: 1.6em 0 0.4em;
+  color: var(--text-dim);
+}
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0.8em 0;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3em;
+}
+.prose li {
+  margin: 0.35em 0;
+}
+.prose li::marker {
+  color: var(--rust);
+}
+.prose blockquote {
+  margin: 1.1em 0;
+  padding: 2px 0 2px 16px;
+  border-left: 2px solid var(--rust);
+  color: var(--text-dim);
+  font-style: italic;
+}
+.prose code {
+  font-family: var(--font-ui);
+  font-size: 0.85em;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 0.05em 0.35em;
+}
+.prose pre {
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 14px;
+  font-size: 0.85rem;
+}
+.prose pre code {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  display: block;
+  overflow-x: auto;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.prose th {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--panel);
+  color: var(--text-dim);
+}
+.prose .unlinked {
+  color: var(--text-dim);
+  border-bottom: 1px dotted var(--text-faint);
+  cursor: help;
+}
+.prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ── формы, таблицы, хронология ── */
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 24px;
+}
+.field input,
+.field select {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  padding: 10px 12px;
+}
+.field input {
+  flex: 1 1 280px;
+}
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+table.data th,
+table.data td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+table.data th {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: var(--panel);
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 20px;
+  border-left: 1px solid var(--line-strong);
+}
+.timeline li {
+  position: relative;
+  padding: 0 0 22px 18px;
+}
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 8px;
+  width: 9px;
+  height: 9px;
+  background: var(--bg);
+  border: 1px solid var(--orange);
+}
+.timeline.undated li::before {
+  border-style: dashed;
+  border-color: var(--text-faint);
+}
+.timeline h3 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+}
+.timeline p {
+  margin: 4px 0 0;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+}

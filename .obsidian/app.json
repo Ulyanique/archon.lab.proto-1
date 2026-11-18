@@ -1,0 +1,19 @@
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "assets/images",
+  "newFileLocation": "folder",
+  "newFileFolderPath": "drafts/inbox",
+  "showFrontmatter": true,
+  "userIgnoreFilters": [
+    "node_modules/",
+    ".next/",
+    "build/",
+    "src/",
+    "packages/",
+    "scripts/",
+    "tests/",
+    ".github/"
+  ]
+}

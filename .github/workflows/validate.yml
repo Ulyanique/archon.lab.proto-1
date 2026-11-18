@@ -1,0 +1,27 @@
+name: validate-lore
+
+# Проверка целостности базы знаний. Автоматика ничего не меняет в каноне — только сообщает.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # --strict: предупреждения (в т.ч. устаревший реестр сущностей) тоже блокируют слияние
+      - name: Validate lore (YAML, схемы, ID, ссылки, даты)
+        run: npx tsx scripts/lore.ts validate --strict
+      - name: Build indexes, graph and contradiction report
+        run: npx tsx scripts/lore.ts build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lore-build
+          path: build/lore/

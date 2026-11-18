@@ -1,2 +1,15 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Normalise text files
+*.md text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+
+# Heavy binaries -> Git LFS (requires `git lfs install` once per clone, see assets/README.md).
+# Rules are inactive until git-lfs is installed; no such files exist yet.
+assets/audio/**   filter=lfs diff=lfs merge=lfs -text
+assets/video/**   filter=lfs diff=lfs merge=lfs -text
+assets/models/**  filter=lfs diff=lfs merge=lfs -text
+*.psd             filter=lfs diff=lfs merge=lfs -text
+*.blend           filter=lfs diff=lfs merge=lfs -text
+*.kra             filter=lfs diff=lfs merge=lfs -text
