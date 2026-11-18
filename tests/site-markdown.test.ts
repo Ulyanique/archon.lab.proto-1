@@ -53,3 +53,30 @@ describe("сайт: рендер Markdown", () => {
     expect(messages).not.toContain("каталог");
   });
 });
+
+describe("граница публикации и безопасность", () => {
+  it("не публикует полный реестр или ссылки на него", async () => {
+    const { metaNotes } = await import("../src/lib/lore");
+    const { hrefForDoc } = await import("../src/lib/markdown");
+    const { REGISTRY_PATH } = await import("@archon/lore-indexer");
+    const privateKb = kbFrom({
+      [REGISTRY_PATH]: "# Реестр\n\nСекретный черновик concept-secret",
+      "universe/00-meta/Открытая.md": "# Открытая\n\n[[Реестр сущностей]]",
+      "universe/01-cosmology/Секретный черновик.md": entity({ id: "concept-secret", title: "Секретный черновик", status: "draft" }),
+    });
+    const registry = privateKb.documents.find((d) => d.path === REGISTRY_PATH)!;
+    const open = privateKb.documents.find((d) => d.fileName === "Открытая")!;
+    expect(metaNotes(privateKb).map((n) => n.doc.path)).not.toContain(REGISTRY_PATH);
+    expect(hrefForDoc(privateKb, registry)).toBeNull();
+    expect(renderDocument(privateKb, open)).not.toContain('href="/universe/reestr-suschnostey"');
+  });
+
+  it("удаляет скрипты, обработчики и опасные URL, сохраняя обычные ссылки", () => {
+    const unsafeKb = kbFrom({
+      "universe/00-meta/Тест.md": '# Тест\n\n<script>alert(1)</script><img src=x onerror="alert(2)">\n\n<a href="javascript:alert(3)" onclick="alert(4)">опасно</a> [безопасно](https://example.org)',
+    });
+    const html = renderDocument(unsafeKb, unsafeKb.documents[0]);
+    expect(html).not.toMatch(/<script|<img|onerror|onclick|javascript:/i);
+    expect(html).toContain('<a href="https://example.org">безопасно</a>');
+  });
+});

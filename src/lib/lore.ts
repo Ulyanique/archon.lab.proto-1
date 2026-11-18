@@ -4,7 +4,7 @@ import {
   isPublishedStatus,
   type SectionKey,
 } from "@archon/lore-schema";
-import { buildGraph, buildTimeline, toIndexEntry, type GraphEdge, type IndexEntry } from "@archon/lore-indexer";
+import { REGISTRY_PATH, buildGraph, buildTimeline, toIndexEntry, type GraphEdge, type IndexEntry } from "@archon/lore-indexer";
 import { slugify } from "./markdown";
 
 /**
@@ -40,7 +40,8 @@ export interface MetaNote {
 
 export function metaNotes(kb = getKb()): MetaNote[] {
   return kb.documents
-    .filter((d) => d.kind === "meta")
+    // Полный реестр содержит также draft/archived и предназначен только для работы в репозитории.
+    .filter((d) => d.kind === "meta" && d.path !== REGISTRY_PATH)
     .map((doc) => ({ slug: slugify(doc.fileName), doc }))
     .sort((a, b) => a.doc.fileName.localeCompare(b.doc.fileName, "ru"));
 }

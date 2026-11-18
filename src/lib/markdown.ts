@@ -1,4 +1,6 @@
 import { marked } from "marked";
+import sanitizeHtml from "sanitize-html";
+import { REGISTRY_PATH } from "@archon/lore-indexer";
 import type { KnowledgeBase, LoreDocument } from "@archon/lore-parser";
 import { isPublishedStatus } from "@archon/lore-schema";
 
@@ -25,7 +27,7 @@ export const metaHref = (doc: LoreDocument) => `/universe/${slugify(doc.fileName
 
 /** Ссылка на документ внутри сайта либо null, если документ не публикуется. */
 export function hrefForDoc(kb: KnowledgeBase, doc: LoreDocument): string | null {
-  if (doc.kind === "meta") return metaHref(doc);
+  if (doc.kind === "meta") return doc.path === REGISTRY_PATH ? null : metaHref(doc);
   if (doc.kind === "entity") {
     const entity = kb.entities.find((e) => e.doc === doc);
     return entity && isPublishedStatus(entity.fm.status) ? entityHref(entity.id) : null;
@@ -76,7 +78,14 @@ function stripLeadingH1(body: string): string {
 
 export function renderDocument(kb: KnowledgeBase, doc: LoreDocument): string {
   const md = rewriteLinks(kb, doc, stripLeadingH1(doc.body));
-  return marked.parse(md, { async: false, gfm: true }) as string;
+  const html = marked.parse(md, { async: false, gfm: true }) as string;
+  // Markdown может содержать произвольный HTML, поэтому фильтруем готовый результат.
+  return sanitizeHtml(html, {
+    allowedTags: sanitizeHtml.defaults.allowedTags,
+    allowedAttributes: { a: ["href", "title"], span: ["class", "title"], code: ["class"] },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowProtocolRelative: false,
+  });
 }
 
 export function documentTitle(doc: LoreDocument): string {

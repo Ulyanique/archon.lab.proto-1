@@ -7,6 +7,7 @@ import {
   SCIENCE_STATUS_LABELS,
   TYPE_INFO,
   SECTIONS,
+  isPublishedStatus,
 } from "@archon/lore-schema";
 import { CanonNotice, StatusStamp } from "@/components/ui";
 import { getKb, linksFor, publishedEntities, type LinkedEntity } from "@/lib/lore";
@@ -23,7 +24,7 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const entity = getKb().byId.get(id);
-  return entity ? { title: entity.fm.title, description: entity.fm.summary } : {};
+  return entity && isPublishedStatus(entity.fm.status) ? { title: entity.fm.title, description: entity.fm.summary } : {};
 }
 
 function LinkList({ items, direction }: { items: LinkedEntity[]; direction: "out" | "in" }) {
@@ -47,7 +48,7 @@ export default async function EntityPage({ params }: Props) {
   const { id } = await params;
   const kb = getKb();
   const entity = kb.byId.get(id);
-  if (!entity) notFound();
+  if (!entity || !isPublishedStatus(entity.fm.status)) notFound();
   const { fm, doc } = entity;
   const html = renderDocument(kb, doc);
   const { outgoing, incoming } = linksFor(id, kb);
