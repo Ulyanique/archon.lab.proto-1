@@ -9,7 +9,7 @@ Markdown + YAML (universe/)          ← единственный источни
         ▼
 lore-parser   → структурированные документы (frontmatter, ссылки, разделы)
         │
-        ├──▶ lore-validator → диагностика, отчёт о противоречиях  (CI-гейт)
+        ├──▶ lore-validator → диагностика, отчёт о противоречиях  (проверка вручную)
         ├──▶ lore-indexer   → build/lore/*.json, граф, реестр сущностей
         ├──▶ Encyclopedia   → статический сайт (Next.js, src/)
         └──▶ [позже] Game / Editor / Tools / RAG
@@ -52,7 +52,7 @@ archon-universe/
 ├── tests/                    # Vitest (юнит + проверка реальной базы)
 │
 ├── src/                      # Encyclopedia MVP (Next.js App Router) + /api/health
-├── .github/                  # workflows (validate, test), шаблоны issue/PR
+├── .github/                  # workflows-updates (не активны), шаблоны issue/PR
 └── .obsidian/                # опциональные настройки Vault
 ```
 

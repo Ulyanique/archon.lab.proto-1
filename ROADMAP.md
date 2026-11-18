@@ -28,7 +28,7 @@
 - ✅ Базовый граф (JSON: узлы/рёбра с типами)
 - ✅ Отчёт о противоречиях и открытых вопросах (эвристики, **ничего не меняют**)
 - ✅ CLI `validate | index | graph | check-links | report | build`
-- ✅ Vitest, GitHub Actions (`validate.yml`, `test.yml`)
+- ✅ Vitest; 🟡 файлы GitHub Actions (`validate.yml`, `test.yml`) находятся в `.github/workflows-updates/` и не запускаются автоматически
 
 ## Этап 3. Encyclopedia MVP 🟡 (стартовая версия сделана)
 - ✅ Главная, навигация, каталоги разделов, страницы сущностей, поиск, адаптивность, дизайн-система

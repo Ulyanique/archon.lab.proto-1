@@ -19,7 +19,7 @@
 4. Для кода: `npx tsc --noEmit`, `npx vitest run`, `npm run build`.
 5. Запись в `CHANGELOG.md` (раздел *Unreleased*).
 
-CI (`.github/workflows`) блокирует слияние при ошибках валидации лора, типов, тестов или сборки.
+Workflow-файлы сохранены в `.github/workflows-updates/` и сейчас **не запускаются** GitHub Actions. До восстановления CI запускайте вручную `npm ci`, `npm run lint`, `npx next typegen`, `npm run typecheck`, `npx vitest run`, `npx tsx scripts/lore.ts validate --strict` и `npm run build`. Если сборке необходим `DATABASE_URL`, задайте его в окружении.
 
 ## Ревью
 
