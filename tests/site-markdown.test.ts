@@ -80,3 +80,30 @@ describe("граница публикации и безопасность", () =
     expect(html).toContain('<a href="https://example.org">безопасно</a>');
   });
 });
+
+describe("якоря и адреса", () => {
+  it("создаёт якоря заголовков и сохраняет переходы к ним", () => {
+    const anchors = kbFrom({
+      "universe/01-cosmology/А.md": entity({ id: "concept-a", title: "А", body: "[[Б#История|вики]] [markdown](Б.md#История) [[#Своя история|свой]] [локально](#Своя%20история)\n\n## Своя история\n\n## Своя история" }),
+      "universe/01-cosmology/Б.md": entity({ id: "concept-b", title: "Б", body: "## История\n\nТекст" }),
+    });
+    const a = renderDocument(anchors, anchors.documents[0]);
+    const b = renderDocument(anchors, anchors.documents[1]);
+    const history = encodeURIComponent("section-история");
+    const own = encodeURIComponent("section-своя-история");
+    expect(a).toContain(`/entity/concept-b#${history}`);
+    expect(a).toContain(`href="#${own}"`);
+    expect(a).toContain('id="section-своя-история"');
+    expect(a).toContain('id="section-своя-история-1"');
+    expect(b).toContain('id="section-история"');
+    const topKb = kbFrom({ "universe/00-meta/Начало.md": "# Начало\n\n[[#Начало|наверх]]" });
+    expect(renderDocument(topKb, topKb.documents[0])).toContain('href="#"');
+  });
+
+  it("отклоняет пустые и совпадающие адреса мета-заметок", async () => {
+    const { metaNotes } = await import("../src/lib/lore");
+    const colliding = kbFrom({ "universe/00-meta/Ёж.md": "# Ёж", "universe/00-meta/Еж.md": "# Еж" });
+    expect(() => metaNotes(colliding)).toThrow(/Одинаковый URL.*Ёж|Одинаковый URL.*Еж/);
+    expect(() => metaNotes(kbFrom({ "universe/00-meta/!!!.md": "# Заметка" }))).toThrow(/Пустой URL/);
+  });
+});

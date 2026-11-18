@@ -39,11 +39,19 @@ export interface MetaNote {
 }
 
 export function metaNotes(kb = getKb()): MetaNote[] {
-  return kb.documents
+  const notes = kb.documents
     // Полный реестр содержит также draft/archived и предназначен только для работы в репозитории.
     .filter((d) => d.kind === "meta" && d.path !== REGISTRY_PATH)
     .map((doc) => ({ slug: slugify(doc.fileName), doc }))
     .sort((a, b) => a.doc.fileName.localeCompare(b.doc.fileName, "ru"));
+  const seen = new Map<string, string>();
+  for (const { slug, doc } of notes) {
+    if (!slug) throw new Error(`Пустой URL мета-заметки: ${doc.path}`);
+    const previous = seen.get(slug);
+    if (previous) throw new Error(`Одинаковый URL мета-заметок «${slug}»: ${previous} и ${doc.path}`);
+    seen.set(slug, doc.path);
+  }
+  return notes;
 }
 
 export interface LinkedEntity {
