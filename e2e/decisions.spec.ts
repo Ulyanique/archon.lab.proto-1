@@ -1,0 +1,152 @@
+import { expect, test } from "@playwright/test";
+
+test("личный черновик сохраняется локально и показывает конфликт зависимости", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto("/hypotheses/H-006");
+  const editor = page.locator(".decision-editor");
+  await expect(editor.getByText(/не меняет реестр/)).toBeVisible();
+  await editor.getByLabel("нравится", { exact: true }).check();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Идея интересна, но сроки открыты.");
+  await editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await expect(editor.getByText(/H-005.*не оценена/)).toBeVisible();
+  await page.reload();
+  await expect(editor.getByLabel("нравится", { exact: true })).toBeChecked();
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Идея интересна, но сроки открыты.");
+  await expect(editor.getByText(/Есть несохранённые изменения/)).toHaveCount(0);
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Новая оговорка");
+  await expect(editor.getByText(/Есть несохранённые изменения/)).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.reload();
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Идея интересна, но сроки открыты.");
+  await expect(page.locator(".workshop-notice").getByText("предложена")).toBeVisible();
+  await page.goto("/hypotheses/H-005");
+  const dependency = page.locator(".decision-editor");
+  await dependency.getByLabel("не нравится", { exact: true }).check();
+  await dependency.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await page.goto("/hypotheses/H-006");
+  await expect(editor.getByText(/H-005.*не нравится/)).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: ".topbar, nextjs-portal { visibility: hidden !important; }" });
+  await editor.screenshot({ path: test.info().outputPath("decision-editor.png"), animations: "disabled", timeout: 20_000 });
+  await editor.getByRole("link", { name: "ОТКРЫТЬ СПИСОК ЧЕРНОВИКОВ ↗" }).click();
+  await page.waitForURL(/\/hypotheses#decision-drafts$/, { timeout: 60_000 });
+  const overview = page.locator(".decision-overview");
+  await expect(overview.locator(".decision-warnings").getByText(/H-005.*не нравится/)).toBeVisible();
+  await expect(overview.locator("textarea")).toHaveValue("H-005 не нравится\nH-006 нравится: Идея интересна, но сроки открыты.");
+  await expect(overview.getByText(/не принимает связанные идеи/)).toBeVisible();
+  await expect(page.locator(".hypothesis-card").filter({ hasText: "H-006" }).getByText("предложена")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goto("/hypotheses/H-006");
+  await editor.getByRole("button", { name: "УДАЛИТЬ ЧЕРНОВИК" }).click();
+  await expect(editor.getByText("Черновик удалён из этого браузера.")).toBeVisible();
+  await page.reload();
+  await expect(editor.getByLabel("нравится", { exact: true })).not.toBeChecked();
+});
+
+test("повреждённый черновик не перезаписывается", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("archon.hypothesis-decision-drafts.v1", "bad data"));
+  await page.goto("/hypotheses/H-006");
+  const editor = page.locator(".decision-editor");
+  await expect(editor.getByRole("alert")).toContainText("не будут перезаписаны");
+  await expect(editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" })).toBeDisabled();
+  expect(await page.evaluate(() => localStorage.getItem("archon.hypothesis-decision-drafts.v1"))).toBe("bad data");
+});
+
+test("две вкладки не затирают несохранённый ответ и требуют разрешить конфликт", async ({ page, context }) => {
+  test.setTimeout(120_000);
+  await page.goto("/hypotheses/H-006");
+  const other = await context.newPage();
+  await other.goto("/hypotheses/H-006");
+  const editor = page.locator(".decision-editor");
+  const second = other.locator(".decision-editor");
+  await editor.getByLabel("нравится", { exact: true }).check();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Первый вариант");
+  await second.getByLabel("доработать", { exact: true }).check();
+  await second.getByLabel(/ОГОВОРКИ/).fill("Вариант другой вкладки");
+  await second.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await expect(editor.getByRole("alert")).toContainText("изменился в другой вкладке");
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Первый вариант");
+  await expect(editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" })).toBeDisabled();
+  await editor.getByRole("button", { name: "ЗАГРУЗИТЬ ДРУГУЮ ВЕРСИЮ" }).click();
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Вариант другой вкладки");
+  await expect(editor.getByLabel("доработать", { exact: true })).toBeChecked();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Мой окончательный вариант");
+  await second.getByLabel(/ОГОВОРКИ/).fill("Новое изменение");
+  await second.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await expect(editor.getByRole("alert")).toBeVisible();
+  await editor.getByRole("button", { name: "ПЕРЕЗАПИСАТЬ СВОИМ ВАРИАНТОМ" }).click();
+  await expect(editor.getByRole("alert")).toHaveCount(0);
+  await expect(second.getByLabel(/ОГОВОРКИ/)).toHaveValue("Мой окончательный вариант");
+  await page.reload();
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Мой окончательный вариант");
+});
+
+test("ошибка записи не уничтожает ввод", async ({ page }) => {
+  await page.goto("/hypotheses/H-006");
+  await page.evaluate(() => { Storage.prototype.setItem = () => { throw new DOMException("blocked", "QuotaExceededError"); }; });
+  const editor = page.locator(".decision-editor");
+  await editor.getByLabel("нравится", { exact: true }).check();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Не терять этот текст");
+  await editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await expect(editor.getByRole("status")).toContainText("Не удалось сохранить");
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Не терять этот текст");
+});
+
+test("несовместимые варианты подсвечиваются на обеих страницах и в обзоре", async ({ page }) => {
+  test.setTimeout(120_000);
+  const editor = page.locator(".decision-editor");
+  for (const id of ["H-025", "H-026"]) {
+    await page.goto(`/hypotheses/${id}`);
+    await editor.getByLabel("нравится", { exact: true }).check();
+    await editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  }
+  await expect(editor.locator(".decision-warnings")).toContainText("H-025 и H-026");
+  await page.goto("/hypotheses/H-025");
+  await expect(editor.locator(".decision-warnings")).toContainText("несовместимые в определённых условиях");
+  await page.goto("/hypotheses");
+  const overview = page.locator(".decision-overview");
+  await expect(overview.locator(".decision-warnings li")).toHaveCount(1);
+  await expect(overview.locator(".decision-warnings")).toContainText("H-025 и H-026");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: "nextjs-portal { visibility: hidden !important; }" });
+  await overview.screenshot({ path: test.info().outputPath("conflict-overview.png") });
+  await expect(overview.locator("textarea")).toHaveValue("H-025 нравится\nH-026 нравится");
+  await page.goto("/hypotheses/H-026");
+  await editor.getByLabel("доработать", { exact: true }).check();
+  await editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await expect(editor.locator(".decision-warnings")).toHaveCount(0);
+});
+
+test("предупреждение защищает несохранённый ввод при переходе и перезагрузке", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto("/hypotheses/H-006");
+  const editor = page.locator(".decision-editor");
+  await editor.getByLabel("нравится", { exact: true }).check();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Текст, который нельзя потерять");
+  page.once("dialog", async (dialog) => { expect(dialog.type()).toBe("confirm"); await dialog.dismiss(); });
+  await editor.getByRole("link", { name: "ОТКРЫТЬ СПИСОК ЧЕРНОВИКОВ ↗" }).click();
+  await expect(page).toHaveURL(/\/hypotheses\/H-006$/);
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("Текст, который нельзя потерять");
+  const acceptedDialogs: string[] = [];
+  const acceptNavigation = async (dialog: import("@playwright/test").Dialog) => { acceptedDialogs.push(dialog.type()); await dialog.accept(); };
+  page.on("dialog", acceptNavigation);
+  await editor.getByRole("link", { name: "ОТКРЫТЬ СПИСОК ЧЕРНОВИКОВ ↗" }).click();
+  await page.waitForURL(/\/hypotheses#decision-drafts$/, { timeout: 60_000 });
+  page.off("dialog", acceptNavigation);
+  expect(acceptedDialogs).toContain("confirm");
+  await page.goto("/hypotheses/H-006");
+  await editor.getByLabel("нравится", { exact: true }).check();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Новый несохранённый текст");
+  let type = "";
+  page.once("dialog", async (dialog) => { type = dialog.type(); await dialog.accept(); });
+  await page.reload();
+  expect(type).toBe("beforeunload");
+  await expect(editor.getByLabel(/ОГОВОРКИ/)).toHaveValue("");
+  await editor.getByLabel("нравится", { exact: true }).check();
+  await editor.getByLabel(/ОГОВОРКИ/).fill("Сохранённый текст");
+  await editor.getByRole("button", { name: "СОХРАНИТЬ ЧЕРНОВИК" }).click();
+  await editor.getByRole("link", { name: "ОТКРЫТЬ СПИСОК ЧЕРНОВИКОВ ↗" }).click();
+  await page.waitForURL(/\/hypotheses#decision-drafts$/, { timeout: 60_000 });
+  await expect(page.locator(".decision-overview textarea")).toHaveValue("H-006 нравится: Сохранённый текст");
+});

@@ -92,6 +92,17 @@ describe("lore-validator", () => {
     expect(codes(validateKnowledgeBase(kb), "error")).toEqual([]);
   });
 
+  it("проверяет число дней в месяце и високосные годы", () => {
+    for (const date of ["2025-02-29", "2024-02-30", "1900-02-29", "2024-04-31"]) {
+      const kb = kbFrom(Object.fromEntries([ev("event-a", "А", `  precision: exact\n  calendar: gregorian\n  start: ${date}`)]));
+      expect(codes(validateKnowledgeBase(kb), "error"), date).toContain("DATE-FORMAT");
+    }
+    for (const date of ["2024-02-29", "2000-02-29", "2025-04-30"]) {
+      const kb = kbFrom(Object.fromEntries([ev("event-a", "А", `  precision: exact\n  calendar: gregorian\n  start: ${date}`)]));
+      expect(codes(validateKnowledgeBase(kb), "error"), date).not.toContain("DATE-FORMAT");
+    }
+  });
+
   it("precision=range требует start и end; unknown не допускает даты", () => {
     const kb = kbFrom(
       Object.fromEntries([

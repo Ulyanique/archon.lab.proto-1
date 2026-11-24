@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test";
+
+test("дневники видны целиком и связаны с Харпером и историей", async ({ page }, info) => {
+  test.setTimeout(90_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error" && /hydrat/i.test(message.text())) errors.push(message.text()); });
+  await page.goto("/studio");
+  await page.getByRole("link", { name: /Дневники Харпера/ }).click();
+  await expect(page.getByRole("heading", { name: "Дневники Харпера." })).toBeVisible();
+  await expect(page.getByText("ХУДОЖЕСТВЕННЫЙ ЧЕРНОВИК / НЕ КАНОН")).toBeVisible();
+  await expect(page.locator(".diary-entry")).toHaveCount(3);
+  await expect(page.locator("#diary-harper-coffee-001")).toContainText("БУМАГА");
+  await expect(page.locator("#diary-harper-coffee-001")).toContainText("не помню номер телефона собственного техника");
+  await expect(page.locator("#diary-harper-school-002")).toContainText("На одном рисунке забора не оказалось");
+  await expect(page.locator("#diary-harper-record-003")).toContainText("сначала проверить часы");
+  await expect(page.locator("#diary-harper-school-002")).toContainText("не подтверждение событий");
+  await expect(page.locator("#diary-harper-school-002").getByRole("link", { name: /История \/ Элеонора/ })).toHaveAttribute("href", "/stories/story-eleonora-before-message");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: ".topbar, nextjs-portal { visibility: hidden !important; }" });
+  await page.screenshot({ path: info.outputPath("diaries.png"), animations: "disabled" });
+  await page.goto("/entity/character-alexei-harper");
+  await expect(page.getByRole("link", { name: "ВСЕ ДНЕВНИКИ ↗" })).toHaveAttribute("href", "/diaries");
+  await page.goto("/stories/story-eleonora-before-message");
+  await expect(page.getByRole("complementary", { name: "Контекст истории" }).getByRole("link", { name: /Задайте правильный вопрос/ })).toHaveAttribute("href", "/diaries#diary-harper-school-002");
+  await page.goto("/search");
+  await page.getByLabel("ИСТОЧНИК").selectOption("draft");
+  await page.getByRole("searchbox", { name: "ПОИСК ПО АРХИВУ" }).fill("diary-harper-coffee-001");
+  await expect(page.locator('.search-result[href="/diaries#diary-harper-coffee-001"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});

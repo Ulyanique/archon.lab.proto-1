@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { navigation } from "@/lib/navigation";
 import { NavLinks } from "@/components/NavLinks";
+import "@fontsource-variable/manrope";
+import "@fontsource-variable/oswald";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               Archon
               <small>RESEARCH ARCHIVE</small>
             </Link>
-            <NavLinks />
+            <NavLinks navigation={navigation} />
           </div>
         </header>
         <main className="shell">{children}</main>

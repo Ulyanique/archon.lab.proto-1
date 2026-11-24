@@ -53,3 +53,73 @@ describe("сайт: рендер Markdown", () => {
     expect(messages).not.toContain("каталог");
   });
 });
+
+describe("граница публикации и безопасность", () => {
+  it("не публикует полный реестр или ссылки на него", async () => {
+    const { metaNotes } = await import("../src/lib/lore");
+    const { hrefForDoc } = await import("../src/lib/markdown");
+    const { REGISTRY_PATH } = await import("@archon/lore-indexer");
+    const privateKb = kbFrom({
+      [REGISTRY_PATH]: "# Реестр\n\nСекретный черновик concept-secret",
+      "universe/00-meta/Открытая.md": "# Открытая\n\n[[Реестр сущностей]]",
+      "universe/01-cosmology/Секретный черновик.md": entity({ id: "concept-secret", title: "Секретный черновик", status: "draft" }),
+    });
+    const registry = privateKb.documents.find((d) => d.path === REGISTRY_PATH)!;
+    const open = privateKb.documents.find((d) => d.fileName === "Открытая")!;
+    expect(metaNotes(privateKb).map((n) => n.doc.path)).not.toContain(REGISTRY_PATH);
+    expect(hrefForDoc(privateKb, registry)).toBeNull();
+    expect(renderDocument(privateKb, open)).not.toContain('href="/universe/reestr-suschnostey"');
+  });
+
+  it("удаляет скрипты, обработчики и опасные URL, сохраняя обычные ссылки", () => {
+    const unsafeKb = kbFrom({
+      "universe/00-meta/Тест.md": '# Тест\n\n<script>alert(1)</script><img src=x onerror="alert(2)">\n\n<a href="javascript:alert(3)" onclick="alert(4)">опасно</a> [безопасно](https://example.org)',
+    });
+    const html = renderDocument(unsafeKb, unsafeKb.documents[0]);
+    expect(html).not.toMatch(/<script|<img|onerror|onclick|javascript:/i);
+    expect(html).toContain('<a href="https://example.org">безопасно</a>');
+  });
+});
+
+describe("якоря и адреса", () => {
+  it("создаёт якоря заголовков и сохраняет переходы к ним", () => {
+    const anchors = kbFrom({
+      "universe/01-cosmology/А.md": entity({ id: "concept-a", title: "А", body: "[[Б#История|вики]] [markdown](Б.md#История) [[#Своя история|свой]] [локально](#Своя%20история)\n\n## Своя история\n\n## Своя история" }),
+      "universe/01-cosmology/Б.md": entity({ id: "concept-b", title: "Б", body: "## История\n\nТекст" }),
+    });
+    const a = renderDocument(anchors, anchors.documents[0]);
+    const b = renderDocument(anchors, anchors.documents[1]);
+    const history = encodeURIComponent("section-история");
+    const own = encodeURIComponent("section-своя-история");
+    expect(a).toContain(`/entity/concept-b#${history}`);
+    expect(a).toContain(`href="#${own}"`);
+    expect(a).toContain('id="section-своя-история"');
+    expect(a).toContain('id="section-своя-история-1"');
+    expect(b).toContain('id="section-история"');
+    const topKb = kbFrom({ "universe/00-meta/Начало.md": "# Начало\n\n[[#Начало|наверх]]" });
+    expect(renderDocument(topKb, topKb.documents[0])).toContain('href="#"');
+  });
+
+  it("отклоняет пустые и совпадающие адреса мета-заметок", async () => {
+    const { metaNotes } = await import("../src/lib/lore");
+    const colliding = kbFrom({ "universe/00-meta/Ёж.md": "# Ёж", "universe/00-meta/Еж.md": "# Еж" });
+    expect(() => metaNotes(colliding)).toThrow(/Одинаковый URL.*Ёж|Одинаковый URL.*Еж/);
+    expect(() => metaNotes(kbFrom({ "universe/00-meta/!!!.md": "# Заметка" }))).toThrow(/Пустой URL/);
+  });
+});
+
+describe("фильтрация неопубликованного лора на сайте", () => {
+  it("исключает архив и черновики из поиска, разделов и связей", async () => {
+    const { publishedIndex, entitiesInSection, allEdgesForSite, linksFor } = await import("../src/lib/lore");
+    const sample = kbFrom({
+      "universe/01-cosmology/Открытая.md": entity({ id: "concept-public", title: "Открытая", extra: "related:\n  - concept-archived\n  - concept-draft\n  - concept-visible" }),
+      "universe/01-cosmology/Видимая.md": entity({ id: "concept-visible", title: "Видимая" }),
+      "universe/01-cosmology/Архив.md": entity({ id: "concept-archived", title: "Архив", status: "archived" }),
+      "universe/01-cosmology/Черновик.md": entity({ id: "concept-draft", title: "Черновик", status: "draft" }),
+    });
+    expect(publishedIndex(sample).map((entry) => entry.id).sort()).toEqual(["concept-public", "concept-visible"]);
+    expect(entitiesInSection("concepts", sample).map((entry) => entry.id).sort()).toEqual(["concept-public", "concept-visible"]);
+    expect(allEdgesForSite(sample).map(({ source, target }) => [source, target])).toEqual([["concept-public", "concept-visible"]]);
+    expect(linksFor("concept-public", sample).outgoing.map(({ entity }) => entity.id)).toEqual(["concept-visible"]);
+  });
+});

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "art-001",
+    "title": "Исследовательский архив",
+    "description": "Атмосферная визуализация индустриального архива для главной страницы. Это художественная интерпретация, а не изображение установленной локации.",
+    "image": "/images/archive-hero.jpg",
+    "alt": "Монументальное подземное индустриальное сооружение в темноте и дымке",
+    "category": "Атмосфера и среда",
+    "author": "AI-generated imagery",
+    "rights": "Создано для проекта; условия использования подлежат проверке владельцем.",
+    "related": [],
+    "prompt": "Wide cinematic 16:9 key art for a dark science-fiction research archive website. A monumental abandoned subterranean industrial structure, distant layered brutalist concrete architecture and huge machinery receding into atmospheric haze, a tiny warm amber signal light far away, dark charcoal and worn oxidized steel, restrained cold blue-black shadows with hints of rust and muted moss green. Painterly industrial science fiction concept art, tactile rough materials, sophisticated art direction, sparse composition with low contrast darkness on the left half for overlaid type, dramatic sense of scale, no people, no typography, no logos, no UI, no neon, no glossy futuristic holograms."
+  },
+  {
+    "id": "art-002",
+    "title": "Лимб: населённый район и старые пространства",
+    "description": "Рабочая визуальная интерпретация Лимба: обитаемый виртуальный район рядом со старой, менее посещаемой архитектурой. Связано с гипотезой H-012; не устанавливает внешний вид или устройство Лимба в каноне.",
+    "image": "/images/limbo-concept.webp",
+    "width": 1584,
+    "height": 672,
+    "alt": "Воображаемая тихая виртуальная площадь со старой архитектурой и немногочисленными фигурами вдали",
+    "category": "Локация / визуальная гипотеза",
+    "author": "Изображение сгенерировано ИИ для проекта Arena.ai; промпт подготовлен агентом",
+    "rights": "Создано для проекта; условия использования и лицензирование требуют проверки владельцем.",
+    "related": [
+      "location-limbo"
+    ],
+    "prompt": "A single sophisticated science-fiction concept art illustration for the Archon research archive: an atmospheric inhabited virtual district called Limbo, depicted as an ambiguous quiet architectural plaza with a small number of people at a distance and a partly abandoned older arcade beyond, geometrically impossible but subtle transitions between concrete, weathered translucent panels and shadow, warm amber light against muted graphite and desaturated moss-green, tactile and cinematic, restrained not glossy, no neon, no interfaces, no text, no symbols or logos. Imagined visual exploration rather than established canon, no direct brain connections or headsets depicted. Wide landscape composition."
+  },
+  {
+    "id": "art-003",
+    "title": "Алексей Харпер: рабочий портрет",
+    "description": "Пробная визуальная трактовка исследователя; внешность, одежда, место и настроение не установлены и не являются каноном.",
+    "image": "/images/harper-study.webp",
+    "width": 1200,
+    "height": 655,
+    "alt": "Предположительный портрет задумчивого исследователя за столом в сумрачной лаборатории",
+    "category": "Персонаж / визуальная гипотеза",
+    "author": "Изображение сгенерировано ИИ для проекта Arena.ai; промпт подготовлен агентом",
+    "rights": "Создано для проекта; условия использования и лицензирование требуют проверки владельцем.",
+    "related": [
+      "character-alexei-harper"
+    ],
+    "prompt": "Single editorial science-fiction character concept art portrait, for a fictional research archive: a 45-year-old male scientist named Alexei Harper, shown in an intimate half-length portrait, contemplative and quietly conflicted rather than heroic or villainous, simple functional research clothes, looking slightly away from camera, subtle signs of fatigue, in a sparse dim laboratory with restrained atmospheric depth and warm tungsten practical light; charcoal black, worn steel and muted amber palette, painterly realism, tactile detail, nuanced expression, sophisticated cinematic composition, no captions, no typography, no logos, no neon, no futuristic interface. This is one speculative visual interpretation, not an established canonical appearance."
+  }
+]

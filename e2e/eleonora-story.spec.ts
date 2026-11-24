@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test";
+
+test("рабочая история Элеоноры показывает альтернативы и пределы знаний", async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error" && /hydrat/i.test(message.text())) errors.push(message.text()); });
+  await page.goto("/stories");
+  await page.getByRole("link", { name: /Элеонора — перед сообщением/ }).click();
+  await expect(page.getByRole("heading", { name: "Элеонора — перед сообщением", exact: true })).toBeVisible();
+  await expect(page.getByText("РАБОЧИЙ ВАРИАНТ / НЕ КАНОН")).toBeVisible();
+  const review = page.locator("#story-review");
+  await expect(review).toContainText("1 / СИГНАЛОВ");
+  await expect(review).toContainText("Это могут быть альтернативы или разные периоды");
+  await expect(review.getByRole("link", { name: "H-025", exact: true })).toBeVisible();
+  await expect(review.getByRole("link", { name: "H-026", exact: true })).toBeVisible();
+  const scene = page.locator("#scene-eleonora-before-message-001");
+  await expect(scene).toContainText("не утверждение о внутреннем состоянии");
+  await expect(scene).toContainText("его подлинности");
+  await expect(scene.getByRole("link", { name: "Элеонора ↗", exact: true })).toHaveAttribute("href", "/entity/character-eleonora");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await scene.getByRole("link", { name: "ЧИТАТЬ ПРОБУ В ИСТОЧНИКЕ ↗" }).click();
+  await expect(page.getByRole("heading", { name: "Проба сцены / перед сообщением" })).toBeVisible();
+  await expect(page.locator(".prose")).toContainText("реплики не выбирают между H-025 и H-026");
+  await page.goto("/entity/character-eleonora");
+  await expect(page.getByRole("link", { name: /Элеонора — перед сообщением/ })).toHaveAttribute("href", "/stories/story-eleonora-before-message");
+  await page.goto("/hypotheses/H-025");
+  await expect(page.locator(".workshop-aside section").filter({ hasText: "ИСТОРИИ / НЕ КАНОН" }).getByRole("link", { name: /Элеонора — перед сообщением/ })).toHaveAttribute("href", "/stories/story-eleonora-before-message");
+  await page.goto("/studio/continuity");
+  await expect(page.locator(".continuity-card").filter({ has: page.getByRole("heading", { name: "Элеонора — перед сообщением" }) })).toContainText("1 сигнал по двум правилам");
+  expect(errors).toEqual([]);
+});

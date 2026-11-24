@@ -9,6 +9,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { findRepoRoot, loadKnowledgeBase, type KnowledgeBase } from "@archon/lore-parser";
 import { buildReport, renderReportMarkdown, summarize, validateKnowledgeBase, type Diagnostic } from "@archon/lore-validator";
+import { isPublishedStatus } from "@archon/lore-schema";
+import { validateMediaCatalog } from "../src/lib/media-validation";
+import { parseDiaries } from "../src/lib/diaries";
+import { getStories, parseStories } from "../src/lib/stories";
+import { getDraftConcepts, getHypotheses } from "../src/lib/workshop";
 import { REGISTRY_PATH, buildGraph, buildIndex, buildRegistryMarkdown, buildTimeline } from "@archon/lore-indexer";
 
 const COMMANDS = ["validate", "index", "graph", "check-links", "report", "build"] as const;
@@ -44,8 +49,39 @@ function printDiagnostics(diags: Diagnostic[]) {
   }
 }
 
+function storyDiagnostics(root: string, kb: KnowledgeBase): Diagnostic[] {
+  const path = "drafts/stories/catalog.json";
+  try {
+    parseStories(JSON.parse(readFileSync(join(root, path), "utf8")), {
+      entityIds: new Set(kb.entities.filter((entity) => isPublishedStatus(entity.fm.status)).map((entity) => entity.id)),
+      eventIds: new Set(kb.entities.filter((entity) => isPublishedStatus(entity.fm.status) && entity.fm.type === "event").map((entity) => entity.id)),
+      characterIds: new Set(kb.entities.filter((entity) => isPublishedStatus(entity.fm.status) && (entity.fm.type === "character" || entity.fm.type === "ai")).map((entity) => entity.id)),
+      hypothesisIds: new Set(getHypotheses(root).map((item) => item.id)),
+      conceptHeadings: new Map(getDraftConcepts(root).map((concept) => [concept.slug, new Set(concept.doc.headings.map((heading) => heading.text))])),
+    });
+    return [];
+  } catch (error) { return [{ severity: "error", code: "STORY-INVALID", path, message: error instanceof Error ? error.message : String(error) }]; }
+}
+
+function diaryDiagnostics(root: string, kb: KnowledgeBase): Diagnostic[] {
+  const path = "drafts/diaries/harper.json";
+  try {
+    parseDiaries(JSON.parse(readFileSync(join(root, path), "utf8")), {
+      entityIds: new Set(kb.entities.filter((entity) => isPublishedStatus(entity.fm.status)).map((entity) => entity.id)),
+      hypothesisIds: new Set(getHypotheses(root).map((item) => item.id)),
+      storyIds: new Set(getStories().map((story) => story.id)),
+    });
+    return [];
+  } catch (error) { return [{ severity: "error", code: "DIARY-INVALID", path, message: error instanceof Error ? error.message : String(error) }]; }
+}
+
+function allDiagnostics(root: string, kb: KnowledgeBase): Diagnostic[] {
+  const publishedIds = new Set(kb.entities.filter((entity) => isPublishedStatus(entity.fm.status)).map((entity) => entity.id));
+  return [...validateKnowledgeBase(kb), ...registryDiagnostics(root, kb), ...validateMediaCatalog(root, publishedIds), ...storyDiagnostics(root, kb), ...diaryDiagnostics(root, kb)];
+}
+
 function runValidate(root: string, kb: KnowledgeBase, filter?: (d: Diagnostic) => boolean): { diags: Diagnostic[]; failed: boolean } {
-  let diags = [...validateKnowledgeBase(kb), ...registryDiagnostics(root, kb)];
+  let diags = allDiagnostics(root, kb);
   if (filter) diags = diags.filter(filter);
   const { errors, warnings } = summarize(diags);
   if (asJson) console.log(JSON.stringify({ errors, warnings, diagnostics: diags }, null, 2));
@@ -74,7 +110,7 @@ function runGraph(root: string, kb: KnowledgeBase) {
 }
 
 function runReport(root: string, kb: KnowledgeBase) {
-  const diags = [...validateKnowledgeBase(kb), ...registryDiagnostics(root, kb)];
+  const diags = allDiagnostics(root, kb);
   const report = buildReport(kb, diags);
   console.log("Отчёт:");
   writeOut(root, "build/lore/contradictions.md", renderReportMarkdown(report, diags));
@@ -96,7 +132,7 @@ function main() {
       failed = runValidate(root, kb).failed;
       break;
     case "check-links":
-      failed = runValidate(root, kb, (d) => d.code.startsWith("LINK-") || d.code.startsWith("REF-")).failed;
+      failed = runValidate(root, kb, (d) => d.code.startsWith("LINK-") || d.code.startsWith("REF-") || d.code.startsWith("MEDIA-REF") || d.code.startsWith("DIARY-")).failed;
       break;
     case "index":
       runIndex(root, kb);

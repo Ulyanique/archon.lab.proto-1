@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArtPreview } from "@/components/ArtPreview";
+import { artForEntity } from "@/lib/concept-art";
+import { modelsForEntity } from "@/lib/model-media";
 import { notFound } from "next/navigation";
 import {
   DATE_CERTAINTY_LABELS,
@@ -7,10 +10,14 @@ import {
   SCIENCE_STATUS_LABELS,
   TYPE_INFO,
   SECTIONS,
+  isPublishedStatus,
 } from "@archon/lore-schema";
 import { CanonNotice, StatusStamp } from "@/components/ui";
 import { getKb, linksFor, publishedEntities, type LinkedEntity } from "@/lib/lore";
 import { renderDocument } from "@/lib/markdown";
+import { diariesForEntity, getDiaries } from "@/lib/diaries";
+import { getStories, storiesForEntity } from "@/lib/stories";
+import { getHypotheses, hypothesesForEntity } from "@/lib/workshop";
 
 export const dynamicParams = false;
 
@@ -23,7 +30,7 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const entity = getKb().byId.get(id);
-  return entity ? { title: entity.fm.title, description: entity.fm.summary } : {};
+  return entity && isPublishedStatus(entity.fm.status) ? { title: entity.fm.title, description: entity.fm.summary } : {};
 }
 
 function LinkList({ items, direction }: { items: LinkedEntity[]; direction: "out" | "in" }) {
@@ -47,7 +54,7 @@ export default async function EntityPage({ params }: Props) {
   const { id } = await params;
   const kb = getKb();
   const entity = kb.byId.get(id);
-  if (!entity) notFound();
+  if (!entity || !isPublishedStatus(entity.fm.status)) notFound();
   const { fm, doc } = entity;
   const html = renderDocument(kb, doc);
   const { outgoing, incoming } = linksFor(id, kb);
@@ -58,25 +65,42 @@ export default async function EntityPage({ params }: Props) {
   const out = fm.type === "event" ? outgoing : outgoing.filter((l) => !isEvent(l));
   const inc = fm.type === "event" ? incoming : incoming.filter((l) => !isEvent(l));
   const section = TYPE_INFO[fm.type].section;
+  const media = artForEntity(id);
+  const models = modelsForEntity(id);
+  const hypotheses = hypothesesForEntity(id, getHypotheses());
+  const stories = storiesForEntity(id, getStories());
+  const diaries = diariesForEntity(id, getDiaries());
+  const characterProfile = fm.type === "character" && media.length > 0;
+  const mediaSection = media.length > 0 && <section className="entity-media" aria-labelledby="entity-media-title">
+        <div className="entity-media-heading"><div><p className="section-kicker">ВИЗУАЛЬНАЯ МАСТЕРСКАЯ / НЕ КАНОН</p><h2 id="entity-media-title">Визуальные исследования</h2><p>Образы для обсуждения, не утверждённый облик или факт о мире.</p></div><Link href="/concept-art">ВСЕ РАБОТЫ ↗</Link></div>
+        <div className="entity-media-grid">{media.map((item, index) => <figure key={item.id}><ArtPreview item={item} eager={index === 0} /><figcaption><span>{item.id.toUpperCase()} / {item.category}</span><h3>{item.title}</h3><p>{item.description}</p><Link href={`/concept-art#${item.id}`}>ПРОИСХОЖДЕНИЕ И ПРОМПТ ↗</Link></figcaption></figure>)}</div>
+      </section>;
 
   return (
     <>
       <p className="eyebrow">
         <Link href={`/${section}`}>{SECTIONS[section].title}</Link> {"//"} {TYPE_INFO[fm.type].label} {"//"} запись <b>{fm.id}</b>
       </p>
-      <h1 className="page-title">{fm.title}</h1>
-      <p style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", margin: "0 0 4px" }}>
-        <StatusStamp status={fm.status} />
-        {fm.aliases.length ? <span className="mono" style={{ fontSize: 12, color: "var(--text-dim)" }}>также: {fm.aliases.join(" · ")}</span> : null}
-      </p>
-      {fm.summary ? <p className="lead">{fm.summary}</p> : null}
-      <CanonNotice status={fm.status} />
+      <div className={characterProfile ? "entity-profile" : undefined}>
+        <div className="entity-profile-copy">
+          <h1 className="page-title">{fm.title}</h1>
+          <p style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", margin: "0 0 4px" }}>
+            <StatusStamp status={fm.status} />
+            {fm.aliases.length ? <span className="mono" style={{ fontSize: 12, color: "var(--text-dim)" }}>также: {fm.aliases.join(" · ")}</span> : null}
+          </p>
+          {fm.summary ? <p className="lead">{fm.summary}</p> : null}
+          <CanonNotice status={fm.status} />
+          {characterProfile && <nav className="entity-profile-nav" aria-label="На странице"><a href="#entity-story">История ↓</a><a href="#entity-connections">Связи и метаданные ↓</a></nav>}
+        </div>
+        {characterProfile && mediaSection}
+      </div>
       <hr className="rule" />
-
+      {!characterProfile && mediaSection}
+      {models.length > 0 && <section className="entity-models" aria-labelledby="entity-models-title"><p className="section-kicker">3D / РАБОЧИЕ МАТЕРИАЛЫ</p><h2 id="entity-models-title">Трёхмерные модели</h2><p>Модели предназначены для изучения и не утверждают канон. Для просмотра GLB нужен совместимый просмотрщик.</p><ul>{models.map((model) => <li key={model.id}><div><h3>{model.title}</h3><p>{model.description}</p><small>{model.author} · {model.rights}</small></div><a href={model.file} download>СКАЧАТЬ GLB ↗</a></li>)}</ul></section>}
       <div className="entity-layout">
-        <article className="prose" dangerouslySetInnerHTML={{ __html: html }} />
+        <article id="entity-story" className="prose" dangerouslySetInnerHTML={{ __html: html }} />
 
-        <aside className="aside" aria-label="Метаданные и связи">
+        <aside id="entity-connections" className="aside" aria-label="Метаданные и связи">
           <section>
             <h3>МЕТАДАННЫЕ</h3>
             <dl>
@@ -107,6 +131,19 @@ export default async function EntityPage({ params }: Props) {
               </div>
             ) : null}
           </section>
+
+          {hypotheses.length > 0 ? (
+            <section className="entity-workshop">
+              <h3>МАСТЕРСКАЯ / НЕ КАНОН</h3>
+              <p>Идеи для обсуждения, связанные с этой записью. Их содержание и решения не являются частью лора.</p>
+              <ul>{hypotheses.map((item) => <li key={item.id}><Link href={`/hypotheses/${item.id}`}><b>{item.id}</b> · {item.title}</Link><span>{item.status}</span></li>)}</ul>
+              <Link className="entity-workshop-all" href="/hypotheses">ВСЕ ГИПОТЕЗЫ ↗</Link>
+            </section>
+          ) : null}
+
+          {stories.length > 0 && <section className="entity-workshop"><h3>ИСТОРИИ / НЕ КАНОН</h3><p>Рабочие сюжеты, связанные с записью; события не устанавливаются как факт.</p><ul>{stories.map((story) => <li key={story.id}><Link href={`/stories/${story.id}`}>{story.title} ↗</Link></li>)}</ul></section>}
+
+          {diaries.length > 0 && <section className="entity-workshop"><h3>ДНЕВНИКИ / НЕ КАНОН</h3><p>Художественный голос Харпера; наблюдения и события не утверждены.</p><ul>{diaries.map((entry) => <li key={entry.id}><Link href={`/diaries#${entry.id}`}>{entry.title} ↗</Link></li>)}</ul><Link className="entity-workshop-all" href="/diaries">ВСЕ ДНЕВНИКИ ↗</Link></section>}
 
           {fm.date ? (
             <section>

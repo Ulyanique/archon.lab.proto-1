@@ -1,0 +1,11 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = { title: "Источники вдохновения" };
+const sources = [
+  { id: "silo", title: "Silo / Укрытие", kind: "СЕРИАЛ · 2023", original: "Телесериал Apple TV+, созданный Грэмом Йостом по книжной трилогии Хью Хауи.", link: "https://www.apple.com/tv-pr/news/2023/04/apple-tv-brings-hugh-howeys-bestselling-trilogy-to-life-in-new-trailer-for-silo-premiering-globally-friday-may-5/", lesson: "Постепенное раскрытие среды, ограниченное знание героев и переосмысление очевидного. Ориентир на принцип работы с тайной, не на копирование сюжетных поворотов или устройства убежища." },
+  { id: "waterworld", title: "Waterworld / Водный мир", kind: "ФИЛЬМ · 1995", original: "Фильм режиссёра Кевина Рейнольдса; образ морских курильщиков на танкере — предложенный владельцем ориентир.", link: "https://www.imdb.com/title/tt0114898/", lesson: "Морская культура, корабль как среда жизни, материальность и экономика выживания. Сообщества Архона следует придумать самостоятельно, а не воспроизводить персонажей, атрибуты и сюжет фильма." },
+];
+export default function InspirationPage() {
+  return <div className="studio"><header className="studio-intro"><div><p className="section-kicker">АРХОН / ТВОРЧЕСКИЙ АРХИВ</p><h1>Источники <span>вдохновения.</span></h1><p className="studio-lead">Произведения, которые помогают искать ритм, идеи и атмосферу — с указанием оригинала.</p></div><div className="studio-intro-side"><span>РЕФЕРЕНСЫ / НЕ КАНОН</span><p>Вдохновение не означает заимствование сюжета. Скрытые отсылки должны работать и для тех, кто не знает оригинала.</p></div></header><section className="studio-domains"><div className="studio-domain-grid">{sources.map((source) => <article className="studio-domain" id={source.id} key={source.id}><div className="studio-domain-top"><span>{source.kind}</span><span>ВЫБОР ВЛАДЕЛЬЦА</span></div><h2>{source.title}</h2><p>{source.original}</p><p>{source.lesson}</p><div className="studio-domain-links"><a href={source.link} target="_blank" rel="noreferrer">ОБ ИСТОЧНИКЕ ↗</a></div></article>)}</div></section><p className="studio-privacy">Реестр открыт для пополнения. Указание источника не даёт прав на чужие материалы. <Link href="/studio">Вернуться в студию ↗</Link></p></div>;
+}

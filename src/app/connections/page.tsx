@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RELATION_TYPES } from "@archon/lore-schema";
-import { allEdgesForSite, getKb } from "@/lib/lore";
+import { allEdgesForSite, getKb, publishedEntities } from "@/lib/lore";
+import { KnowledgeGraph } from "@/components/KnowledgeGraph";
 
 export const metadata: Metadata = { title: "Связи" };
 
@@ -10,6 +11,7 @@ export default function ConnectionsPage() {
   const edges = allEdgesForSite(kb).sort(
     (a, b) => a.type.localeCompare(b.type) || (kb.byId.get(a.source)!.fm.title).localeCompare(kb.byId.get(b.source)!.fm.title, "ru"),
   );
+  const nodes = publishedEntities(kb).map((e) => ({ id: e.id, label: e.fm.title, type: e.fm.type, status: e.fm.status, published: true }));
   const byType = new Map<string, number>();
   for (const e of edges) byType.set(e.type, (byType.get(e.type) ?? 0) + 1);
 
@@ -20,8 +22,10 @@ export default function ConnectionsPage() {
       </p>
       <h1 className="page-title">Связи</h1>
       <p className="lead">
-        Список связей, автоматически выведенных из frontmatter (<code>related</code>, <code>relations</code>, поля событий) и вики-ссылок в тексте. Интерактивный граф запланирован на следующий этап; данные для него уже строятся командой <code>lore graph</code>.
+        Карта и список связей автоматически строятся из метаданных и ссылок в статьях. Видны только опубликованные записи; тип и направление связи доступны в таблице ниже.
       </p>
+      <KnowledgeGraph nodes={nodes} edges={edges} />
+      <div className="section-head"><h2>Все связи</h2></div>
       <div className="tags" style={{ margin: "16px 0 24px" }}>
         {[...byType.entries()].map(([type, n]) => (
           <span key={type} className="tag" title={RELATION_TYPES[type]?.description}>

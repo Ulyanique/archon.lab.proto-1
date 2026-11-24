@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { extractEdges, findRepoRoot, loadKnowledgeBase } from "@archon/lore-parser";
 import { summarize, validateKnowledgeBase } from "@archon/lore-validator";
 import { REGISTRY_PATH, buildGraph, buildIndex, buildRegistryMarkdown, buildTimeline } from "@archon/lore-indexer";
+import { isPublishedStatus } from "@archon/lore-schema";
 
 const root = findRepoRoot();
 const kb = loadKnowledgeBase(root);
@@ -28,6 +29,13 @@ describe("реальная база знаний universe/", () => {
       expect(kb.byId.has(id), id).toBe(true);
     }
     expect(kb.byId.get("character-alexei-harper")!.fm.aliases).toEqual(expect.arrayContaining(["Доктор Харпер", "Кассиус"]));
+  });
+
+  it("нейроинтерфейс сохранён в архиве, но исключён из публикации и активных связей", () => {
+    const neural = kb.byId.get("technology-neural-interface")!;
+    expect(neural.fm.status).toBe("archived");
+    expect(isPublishedStatus(neural.fm.status)).toBe(false);
+    expect(extractEdges(kb).filter((edge) => edge.target === neural.id && isPublishedStatus(kb.byId.get(edge.source)!.fm.status))).toEqual([]);
   });
 
   it("первоисточник ТЗ сохранён в docs/source", () => {

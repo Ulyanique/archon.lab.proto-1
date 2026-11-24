@@ -39,8 +39,12 @@ function gregorianBounds(value: string): { lo: string; hi: string } | null {
   if (!m) return null;
   const [, y, mo, d] = m;
   if (mo && (Number(mo) < 1 || Number(mo) > 12)) return null;
-  if (d && (Number(d) < 1 || Number(d) > 31)) return null;
-  return { lo: `${y}-${mo ?? "01"}-${d ?? "01"}`, hi: `${y}-${mo ?? "12"}-${d ?? "31"}` };
+  const year = Number(y);
+  const month = mo ? Number(mo) : undefined;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = month ? [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1] : 31;
+  if (d && (Number(d) < 1 || Number(d) > daysInMonth)) return null;
+  return { lo: `${y}-${mo ?? "01"}-${d ?? "01"}`, hi: `${y}-${mo ?? "12"}-${d ?? String(daysInMonth).padStart(2, "0")}` };
 }
 
 interface DateWindow {
