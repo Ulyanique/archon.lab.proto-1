@@ -1,0 +1,31 @@
+import { expect, test } from "@playwright/test";
+
+test("обзор проверки объясняет ограничения и показывает происхождение указателей", async ({ page }, info) => {
+  test.setTimeout(90_000);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error" && /hydrat/i.test(message.text())) errors.push(message.text()); });
+  await page.goto("/studio");
+  await page.getByRole("link", { name: /Проверка связей историй/ }).click();
+  await expect(page).toHaveURL(/\/studio\/continuity$/);
+  await expect(page.getByRole("heading", { name: "Проверка связей", exact: true })).toBeVisible();
+  await expect(page.getByText(/не проверяются/)).toBeVisible();
+  const card = page.locator(".continuity-card").filter({ has: page.getByRole("heading", { name: "Scrypt — закрытое поручение" }) });
+  await expect(card).toContainText("0 сигналов по двум правилам");
+  await card.getByRole("link", { name: "ПОСМОТРЕТЬ ПРОВЕРКУ ↗" }).click();
+  const review = page.locator("#story-review");
+  await expect(review.getByRole("heading", { name: "Проверка связей" })).toBeVisible();
+  await expect(review).toContainText("не означает, что история завершена или непротиворечива");
+  const h027 = review.getByRole("listitem").filter({ has: page.getByRole("link", { name: /H-027 ·/ }) });
+  await expect(h027).toHaveCount(1);
+  await expect(h027).toContainText("карточка истории");
+  await expect(h027.getByRole("link", { name: /сцена «Запрос к хранителю»/ })).toHaveAttribute("href", "/stories/story-scrypt-request#scene-scrypt-request-001");
+  await expect(h027.getByRole("link", { name: "H-014", exact: true })).toHaveAttribute("href", "/hypotheses/H-014");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: ".topbar, nextjs-portal { visibility: hidden !important; }" });
+  await review.screenshot({ path: info.outputPath("review.png"), animations: "disabled" });
+  await h027.getByRole("link", { name: /сцена «Запрос к хранителю»/ }).click();
+  await expect(page).toHaveURL(/#scene-scrypt-request-001$/);
+  expect(errors).toEqual([]);
+});

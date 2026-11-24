@@ -11,3 +11,5 @@ next-env.d.ts
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/cache
+test-results/
+playwright-report/

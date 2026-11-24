@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { STATUS_INFO, TYPE_INFO, type Status, type EntityType } from "@archon/lore-schema";
+import { LinkPending } from "./LinkPending";
 
 export function StatusStamp({ status }: { status: Status }) {
   return (
@@ -20,6 +21,7 @@ export interface CardData {
 export function EntityCard({ item }: { item: CardData }) {
   return (
     <Link href={`/entity/${item.id}`} className="card">
+      <LinkPending />
       <div className="meta">
         <span>{TYPE_INFO[item.type].label}</span>
         <StatusStamp status={item.status} />

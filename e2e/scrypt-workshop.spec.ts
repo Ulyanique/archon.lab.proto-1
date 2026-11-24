@@ -1,0 +1,36 @@
+import { expect, test } from "@playwright/test";
+
+test("предложения Scrypt доступны в каталоге, связях и рабочем наброске", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto("/hypotheses");
+  const catalog = page.locator("#hypothesis-list");
+  await catalog.getByRole("searchbox", { name: "ПОИСК ПО ГИПОТЕЗАМ" }).fill("H-028");
+  await expect(catalog.getByRole("link", { name: /Оспариваемое исключение/ })).toBeVisible();
+  await catalog.getByRole("link", { name: /Оспариваемое исключение/ }).click();
+  await expect(page.getByText("Гипотеза для обсуждения, не утверждённый канон.")).toBeVisible();
+  await expect(page.locator(".prose")).toContainText("H-027");
+  const aside = page.locator(".workshop-aside");
+  await expect(aside.getByRole("link", { name: "H-027 ↗" })).toBeVisible();
+  await expect(aside.getByRole("link", { name: /Scrypt \(Crypt of Mind\)/ })).toHaveAttribute("href", "/entity/concept-scrypt-crypt-of-mind");
+  await expect(aside.locator("section").filter({ hasText: "ИСТОРИИ / НЕ КАНОН" }).getByRole("link", { name: /Scrypt — закрытое поручение/ })).toHaveAttribute("href", "/stories/story-scrypt-request");
+  await aside.locator("section").filter({ hasText: "УПОМИНАЕТСЯ В КОНЦЕПЦИЯХ" }).getByRole("link", { name: /Scrypt — закрытое поручение/ }).click();
+  await expect(page.getByRole("heading", { name: "Scrypt — закрытое поручение" })).toBeVisible();
+  await expect(page.getByText("Проект для обсуждения, не утверждённый канон.")).toBeVisible();
+  await expect(page.locator(".prose")).toContainText("не переносит сознание");
+  await page.goto("/hypotheses/H-029");
+  await expect(page.locator(".prose")).toContainText("не знает, существует ли оно");
+  await expect(page.locator(".workshop-aside").getByRole("link", { name: "H-027 ↗" })).toBeVisible();
+  await expect(page.locator(".workshop-aside section").filter({ hasText: "ИСТОРИИ / НЕ КАНОН" }).getByRole("link", { name: /Scrypt — закрытое поручение/ })).toHaveAttribute("href", "/stories/story-scrypt-request");
+  await page.goto("/hypotheses/H-030");
+  await expect(page.locator(".workshop-aside").getByRole("link", { name: "H-028 ↗" })).toBeVisible();
+  await page.goto("/entity/concept-scrypt-crypt-of-mind");
+  await expect(page.locator(".entity-workshop").getByRole("link", { name: /H-027/ })).toBeVisible();
+  await expect(page.locator(".entity-workshop").getByRole("link", { name: /H-028/ })).toBeVisible();
+  await expect(page.locator(".entity-workshop").getByRole("link", { name: /Scrypt — закрытое поручение/ })).toHaveAttribute("href", "/stories/story-scrypt-request");
+  await page.goto("/search");
+  await page.getByLabel("ИСТОЧНИК").selectOption("draft");
+  await page.getByRole("searchbox", { name: "ПОИСК ПО АРХИВУ" }).fill("закрытое поручение");
+  await expect(page.locator('.search-result[href="/concept-drafts/scrypt-zakrytoe-poruchenie"]')).toBeVisible();
+  await expect(page.locator('.search-result[href="/stories/story-scrypt-request"]')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

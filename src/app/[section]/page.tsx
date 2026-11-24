@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SECTIONS, TYPE_INFO, type SectionKey } from "@archon/lore-schema";
 import { EntityCard } from "@/components/ui";
 import { entitiesInSection } from "@/lib/lore";
+import { getDraftConcepts } from "@/lib/workshop";
 
 export const dynamicParams = false;
 
@@ -23,6 +25,7 @@ export default async function SectionPage({ params }: Props) {
   const def = SECTIONS[section as SectionKey];
   const entities = entitiesInSection(section as SectionKey);
   const types = def.types.filter((t) => entities.some((e) => e.fm.type === t));
+  const drafts = section === "concepts" ? getDraftConcepts() : [];
 
   return (
     <>
@@ -56,6 +59,7 @@ export default async function SectionPage({ params }: Props) {
           </section>
         ))
       )}
+      {drafts.length > 0 ? <section className="concept-drafts"><div className="section-head"><h2>Концепции в разработке</h2><span className="eyebrow">ЧЕРНОВИКИ / НЕ КАНОН</span></div><p className="concept-drafts-lead">Проекты для обсуждения, которые ещё не утверждены как лор.</p><div className="grid">{drafts.map((draft) => <Link className="card" href={`/concept-drafts/${draft.slug}`} key={draft.slug}><div className="meta"><span>Рабочая концепция</span><span>Черновик</span></div><h3>{draft.title}</h3><p>Открыть концепцию и вопросы для обсуждения ↗</p></Link>)}</div></section> : null}
     </>
   );
 }
